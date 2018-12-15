@@ -16,6 +16,8 @@
 		li $v1,5  #---since i can't figure out how to get rid of newline "\n" i will add 1 more int...hence why 5
 		slt $t1,$v1,$v0      # checks if $s0 > $s1
 		beq $t1,1,isTooLong_Function 
+		blez $v0
+		beq $t1,1,isEmpty_Function
 		
 				
 		j exit   #--end program		
@@ -38,6 +40,7 @@
 
 			strlen:
 			move $t1, $zero		#--init to zero's
+
 		loop:
 			lb   $a2,0($a0)	#--address to our input
 			beqz $a2,done
