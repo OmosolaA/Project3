@@ -1,18 +1,26 @@
 # N = 29
-# N = 29
 .data
-	userInput: 	.space 500
+	input: 	.space 80
+	userInput: 	.asciiz "Enter character, maximum value of 4: "
 	isTooLong:	.asciiz "Input is too long."
 	isEmpty:	.asciiz "Input is empty."
 	invalidInput:	.asciiz "Invalid base-N number."
-
-	main: #gets the user input
-		li $v0, 8
-		la $a0, userInput
-		li $a1, 250
-		syscall
-
 .text
+	main: #gets the user 
+		get_userInput: 
+			la $a0, userInput #--prints the string for user input 
+			li $v0, 4
+			syscall 
+
+			la $a0, input #-- gets user input stores in register $A0
+			li $a1, 80
+			li $v0, 5
+			syscall
+
+			move $a0, $v0
+			li $v0, 1
+			syscall
+
 	isTooLong_Function: #calls isTooLong and prints the string
 		la $a0, isTooLong
 		li $v0, 4
@@ -31,9 +39,9 @@
 		syscall
 		j exit
 
-	deleteChar: #adds 1 to $a0 and goes back to the deleteSpace function
-		addi $a0, $a0, 1
-		j deleteSpace 
+	exit: 
+		li $v0, 10
+		syscall 
 
 	deleteSpace:
 		li $t8, 32 #loads a space into temporary register
@@ -42,9 +50,13 @@
 		move $t9, $a0 #move null space in $t9 to $a0
 		j inputLength
 
+	deleteChar: #adds 1 to $a0 and goes back to the deleteSpace function
+		addi $a0, $a0, 1
+		j deleteSpace 
+
 	inputLength:
 		addi $t0, $t0, 0 #empties the temp register by giving it a null value
-		addi $t2, $t2, 10 #give 10 bytes to temp register
+		addi $t1, $t1, 10 #give 10 bytes to temp register
 		add $t4, $t4, $a0
 	
 	stringIteration: 
@@ -52,7 +64,7 @@
 		beqz $t2, stringLength
 		beq $t2, $t1, stringLength #compares length of values stored in $t2 and $t1
 		addi $a0, $a0, 1
-		addi $t0, t0, 1
+		addi $t0, $t0, 1
 		j stringIteration
 
 	stringLength: #sets the length of the function and moves it from $a0 to $t4
@@ -72,13 +84,13 @@
 		bne $t6, $zero, moveChar #if t6 and zero are not equal then move the character 
 		slti $t6, $t5, 65
 		bne $t6, $zero, invalidInput 
-		slti $t6, $t5, 84 #65 + 29 "N"  - 10 
+		slti $t6, $t5, 83 #65 + 29 "N"  - 10 
 		bne $t6, $zero, moveChar
 		slti $t6, $t5, 97
 		bne $t6, $zero, invalidInput
-		slti $t6, $t5, 116 #97 + 29 "N"  - 10
+		slti $t6, $t5, 115 #97 + 29 "N"  - 10
 		bne $t6, $zero, moveChar
-		bgt $t5, 117, invalidInput #97 + 29 "N" - 9
+		bgt $t5, 116, invalidInput #97 + 29 "N" - 9
 
 	moveChar: 
 		addi $a0, $a0, 1
@@ -101,20 +113,19 @@
 		slti $t6, $s4, 58
 		bne $t6, $zero, baseTen	
 		slti $t6, $s4, 88
-		bne $t6, $zero, base33Up
+		bne $t6, $zero, base29Up
 		slti $t6, $s4, 120
-		bne $t6, $zero, base33Low
+		bne $t6, $zero, base29Low
 		
 	baseTen: # base 10 conversion
 		addi $s4, $s4 -48
 		j sResult
 		
-	base33Up: # base 33 upper conversion 
+	base29Up: # base 33 upper conversion 
 		addi $s4, $s4, -55
 		j sResult
-	
-	
-	base33Low: # base 33 low conversion
+
+	base29Low: # base 33 low conversion
 		addi $s4, $s4, -87
 
 	sResult: #compares the characters
@@ -148,7 +159,7 @@
 		add $t7, $t7, $s7
 		addi $s0, $s0, -1
 		addi $a0, $a0, 1
-		j base_convert_input
+		j baseConversion
 
 	charD:
 		li $s6, 1
