@@ -1,7 +1,7 @@
 # N = 29
 .data
 	input: 	.space 80
-	userInput: 	.asciiz "Enter character, maximum value of 4: "
+	userInput: 	.asciiz "Enter a string with 4 characters: "
 	isTooLong:	.asciiz "Input is too long."
 	isEmpty:	.asciiz "Input is empty."
 	invalidInput:	.asciiz "Invalid base-N number."
@@ -22,11 +22,7 @@
 				
 #		j exit   #--end program		
 
-		get_userInput: 
-			addi $sp, $sp, 4
-			sw $ra, 0($sp)
-		#	addi $sp, $sp, 4
-			sw $a0, ($sp)
+		get_userInput:
 
 			la $a0, userInput #--prints the string for user input 
 			li $v0, 4
@@ -60,6 +56,11 @@
 		done:
 			move $v0, $t1	#---result stored in reg $v0
 			jr $ra
+
+			addi $sp, $sp, -4
+			sw $v0, 0($sp)
+			
+
 
 
 		isTooLong_Function: #calls isTooLong and prints the string
