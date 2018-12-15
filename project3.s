@@ -16,13 +16,18 @@
 		li $v1,5  #---since i can't figure out how to get rid of newline "\n" i will add 1 more int...hence why 5
 		slt $t1,$v1,$v0      # checks if $s0 > $s1
 		beq $t1,1,isTooLong_Function 
-		blez $v0
+
 		beq $t1,1,isEmpty_Function
 		
 				
-		j exit   #--end program		
+#		j exit   #--end program		
 
 		get_userInput: 
+			addi $sp, $sp, 4
+			sw $ra, 0($sp)
+		#	addi $sp, $sp, 4
+			sw $a0, ($sp)
+
 			la $a0, userInput #--prints the string for user input 
 			li $v0, 4
 			syscall 
@@ -31,6 +36,11 @@
 			li $a1, 80
 			li $v0, 8
 			syscall
+
+			la $a0, input
+#			syscall #--perform the operation/command
+# SHOULD BE THE JUMP TO SUBPROGRAM			jal sResult
+
 
 			la $a0, input
 
@@ -70,137 +80,138 @@
 			syscall
 			j exit
 
-		exit: 
-			li $v0, 10
-			syscall 
-
 		deleteSpace:
-			li $t8, 32 #loads a space into temporary register
-			lb $t9, 0($a0) #takes the memory from temp register makes it NULL and store it to register a0
-			beq $t8, $t9 deleteChar #compares $t8 and $t9 to seee if equal if so deleteChar
-			move $t9, $a0 #move null space in $t9 to $a0
+			li $t8, 32 # space
+			lb $t9, 0($a0)
+			beq $t8, $t9, deleteChar
+			move $t9, $a0
 			j inputLength
 
-		deleteChar: #adds 1 to $a0 and goes back to the deleteSpace function
+		deleteChar:
 			addi $a0, $a0, 1
-			j deleteSpace 
+			j deleteSpace
 
 		inputLength:
-			addi $t0, $t0, 0 #empties the temp register by giving it a null value
-			addi $t1, $t1, 10 #give 10 bytes to temp register
+			addi $t0, $t0, 0
+			addi $t1, $t1, 10
 			add $t4, $t4, $a0
-		
-		stringIteration: 
-			lb $t2, 0($a0) #takes memory from $t2 to store in $a0
-			beqz $t2, stringLength
-			beq $t2, $t1, stringLength #compares length of values stored in $t2 and $t1
+
+		lengthIteration:
+			lb $t2, 0($a0) # loads a sign-extended version of the byte into a 32-bit value. I.e. the most significant bit (msb) is copied into the upper 24 bits.
+			beqz $t2, lengthFound
+			beq $t2, $t1, lengthFound
 			addi $a0, $a0, 1
 			addi $t0, $t0, 1
-			j stringIteration
+			j lengthIteration
 
-		stringLength: #sets the length of the function and moves it from $a0 to $t4
+		lengthFound:
 			beqz $t0, isEmpty_Function
-			slti $t3, $t0, 5 
+			slti $t3, $t0, 5
 			beqz $t3, isTooLong_Function
 			move $a0, $t4
-			j stringTest
+			j checkString
 
-		stringTest: #does all the string conversions based on the N
-			lb $t5, 0($a0) #takes memory from t5 and put it in a0
-			beqz $t5, stringConversion
-			beq $t5, $t1 stringConversion #compares strings stored in t5 and t1
-			slti $t6, $5, 48
-			bne $t6, $zero, invalidInput #if t6 and  zero are not equal than input is invalid 
-			slti $t6, $t5, 58
-			bne $t6, $zero, moveChar #if t6 and zero are not equal then move the character 
-			slti $t6, $t5, 65
-			bne $t6, $zero, invalidInput 
-			slti $t6, $t5, 83 #65 + 29 "N"  - 10 
-			bne $t6, $zero, moveChar
-			slti $t6, $t5, 97
-			bne $t6, $zero, invalidInput
-			slti $t6, $t5, 115 #97 + 29 "N"  - 10
-			bne $t6, $zero, moveChar
-			bgt $t5, 116, invalidInput #97 + 29 "N" - 9
+		checkString:
+			lb $t5, 0($a0)
+			beqz $t5, newConversion	
+			beq $t5, $t1, newConversion
+			slti $t6, $t5, 48                 # if char < ascii(48),  input invalid,   ascii(48) = 0 0 -9 restriction 
+			bne $t6, $zero, invalidInput_Function
+			slti $t6, $t5, 58                 # if char < ascii(58),  input is valid,  ascii(58) = 9 0 - 9 restriction 
+			bne $t6, $zero, moveForward
+			slti $t6, $t5, 65                 # if char < ascii(65),  input invalid,   ascii(97) = A
+			bne $t6, $zero, invalidInput_Function
+			slti $t6, $t5, 83                 # if char < ascii(88),  input is valid,  ascii(88) = X
+			bne $t6, $zero, moveForward
+			slti $t6, $t5, 97                 # if char < ascii(97),  input invalid,   ascii(97) = a
+			bne $t6, $zero, invalidInput_Function
+			slti $t6, $t5, 115                # if char < ascii(120), input is valid, ascii(120) = x
+			bne $t6, $zero, moveForward
+			bgt $t5, 116, invalidInput_Function   # if char > ascii(119), input invalid,  ascii(119) = w
 
-		moveChar: 
+		moveForward:
 			addi $a0, $a0, 1
-			j stringTest
-		
-		stringCoversion: #converts string to character
-			move $a0, $t4 #move value in a0 to temporary register
+			j checkString
+
+		newConversion:
+			move $a0, $t4
 			addi $t7, $t7, 0
 			add $s0, $s0, $t0
-			addi $s0, $s0, -1
-			li $s3, 3 #char  1
-			li $s2, 2 #char 2
-			li $s1, 1 #char 3
-			li $s5, 0 #char 4
-		
-		baseConversion: #converts base 10 to base 33 upper and base 33 lower
+			addi $s0, $s0, -1	
+			li $s3, 3
+			li $s2, 2
+			li $s1, 1
+			li $s5, 0
+
+		baseConvert:
 			lb $s4, 0($a0)
-			beqz $s4, printString
-			beq $s4, $t1, printString
+			beqz $s4, printResult
+			beq $s4, $t1, printResult
 			slti $t6, $s4, 58
-			bne $t6, $zero, baseTen	
+			bne $t6, $zero, baseTen
 			slti $t6, $s4, 88
 			bne $t6, $zero, base29Up
 			slti $t6, $s4, 120
 			bne $t6, $zero, base29Low
-			
-		baseTen: # base 10 conversion
-			addi $s4, $s4 -48
+
+		baseTen:
+			addi $s4, $s4, -48
 			j sResult
-			
-		base29Up: # base 33 upper conversion 
+
+		base29Up:
 			addi $s4, $s4, -55
 			j sResult
 
-		base29Low: # base 33 low conversion
+		base29Low:
 			addi $s4, $s4, -87
 
-		sResult: #compares the characters
-			beq $s0, $s3, charA
-			beq $s0, $s2, charB
-			beq $s0, $s1, charC
-			beq $s0, $s5, charD
+		sResult:
+			beq $s0, $s3, firstChar
+			beq $s0, $s2, secondChar
+			beq $s0, $s1, thirdChar
+			beq $s0, $s5, fourthChar
 
-		charA: #takes the number mutliplies it to convert back to base
-			li $s6, 24389  #(base 29)^3
+		firstChar:
+			li $s6, 35937
 			mult $s4, $s6
 			mflo $s7
 			add $t7, $t7, $s7
 			addi $s0, $s0, -1
 			addi $a0, $a0, 1
-			j baseConversion
+			j baseConvert
 
-		charB: 
-			li $s6, 841 # (base 29)^2
+		secondChar:
+			li $s6, 1089
 			mult $s4, $s6
 			mflo $s7
 			add $t7, $t7, $s7
 			addi $s0, $s0, -1
 			addi $a0, $a0, 1
-			j baseConversion
+			j baseConvert
 
-		charC:  #takes the number mutliplies it to convert back to base
-			li $s6, 29 # (base 29)^1
+		thirdChar:
+			li $s6, 33
 			mult $s4, $s6
 			mflo $s7
 			add $t7, $t7, $s7
 			addi $s0, $s0, -1
 			addi $a0, $a0, 1
-			j baseConversion
+			j baseConvert
 
-		charD:
+		fourthChar:
 			li $s6, 1
 			mult $s4, $s6
 			mflo $s7
 			add $t7, $t7, $s7
 
-		printString:
+		printResult:
 			li $v0, 1
 			move $a0, $t7
+			li $v0, 1
 			syscall
 
-	j exit
+	#	conversionSubprogram:
+			
+		exit:
+			li $v0, 10
+			syscall
