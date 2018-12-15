@@ -6,7 +6,7 @@
 	isEmpty:	.asciiz "Input is empty."
 	invalidInput:	.asciiz "Invalid base-N number."
 .text
-	main: #gets the user 
+	main: #--gets the user input
 		jal get_userInput
 
 		jal strlen   #--length is stored inreg $v0
@@ -17,8 +17,11 @@
 		slt $t1,$v1,$v0      # checks if $s0 > $s1
 		beq $t1,1,isTooLong_Function 
 
-		beq $t1,1,isEmpty_Function
-		
+		la $t2, userInput #--load string addr into $t2 register
+        lb $t0, 0($t2)
+        beq $t0, 10, isEmpty_Function #--check for an empty string
+        beq $t0, 0 isEmpty_Function
+
 				
 #		j exit   #--end program		
 
@@ -57,10 +60,21 @@
 			move $v0, $t1	#---result stored in reg $v0
 			jr $ra
 
-			addi $sp, $sp, -4
-			sw $v0, 0($sp)
-			
+		stackPt1:
+			addi $sp, $sp, -8 #--allocating memory for stack
+		    sw $ra, 0($sp) #storing return address
+		    sw $s3, 4($sp) #storing s register so it is not overwritten
+		    beq $a1, $0, stackPt2 #base case
+		    addi $a1, $a1, -1 #length - 1, so to start at end of string
+		    add $t0, $a0, $a1 #getting address of the last byte 
+		    lb $s3, 0($t0)  #loading the byte
 
+		stackPt2:
+			li $v0, 0
+		    lw $ra, 0($sp)
+		    lw $s3, 4($sp)
+		    addi $sp, $sp, 8
+		    jr $ra
 
 
 		isTooLong_Function: #calls isTooLong and prints the string
@@ -172,8 +186,8 @@
 			beq $s0, $s1, thirdChar
 			beq $s0, $s5, fourthChar
 
-		firstChar:
-			li $s6, 35937
+		firstChar: #--takes the number mutliplies it to convert back to base
+			li $s6, 24389 #--(base 29)^3
 			mult $s4, $s6
 			mflo $s7
 			add $t7, $t7, $s7
@@ -182,7 +196,7 @@
 			j baseConvert
 
 		secondChar:
-			li $s6, 1089
+			li $s6, 841 #--(base 29)^2
 			mult $s4, $s6
 			mflo $s7
 			add $t7, $t7, $s7
@@ -191,7 +205,7 @@
 			j baseConvert
 
 		thirdChar:
-			li $s6, 33
+			li $s6, 29
 			mult $s4, $s6
 			mflo $s7
 			add $t7, $t7, $s7
@@ -211,7 +225,14 @@
 			li $v0, 1
 			syscall
 
-	#	conversionSubprogram:
+	conversionSubprogram:
+		sub $t2, $t2, $t1 #move ptr back to start of string
+	    addi $sp, $sp, -4 #allocating memory for stack
+	    sw $ra, 0($sp) #only return address
+	    move $a0, $t2
+	    li $a1, 3 #string length !! 
+	    li $a2, 1 #exponentiated base
+	    jal stackPt1 #call to function
 			
 		exit:
 			li $v0, 10
