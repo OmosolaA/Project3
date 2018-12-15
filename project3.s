@@ -7,6 +7,18 @@
 	invalidInput:	.asciiz "Invalid base-N number."
 .text
 	main: #gets the user 
+		jal get_userInput
+
+		jal strlen   #--length is stored inreg $v0
+
+		
+		#---test if input is more than 4 character..
+		li $v1,5  #---since i can't figure out how to get rid of newline "\n" i will add 1 more int...hence why 5
+		slt $t1,$v1,$v0      # checks if $s0 > $s1
+		beq $t1,1,isTooLong_Function 
+		
+				
+		j exit   #--end program		
 
 		get_userInput: 
 			la $a0, userInput #--prints the string for user input 
@@ -18,10 +30,11 @@
 			li $v0, 8
 			syscall
 
-			la $a0,($v0)
-			move $a2, $a0
-			li $v0, 4
-			syscall
+			la $a0, input
+
+			move $a2, $a0   #--load stored user input at register $a2 back to reg $a0
+			li $v0, 4       # print string
+			syscall			#--execute
 
 			strlen:
 			move $t1, $zero		#--init to zero's
