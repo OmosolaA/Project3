@@ -126,30 +126,30 @@
 			move $a0, $t4
 			j checkString
 
-		checkString:
-			lb $t5, 0($a0)
+		checkString: #--does all the string conversions based on the N
+			lb $t5, 0($a0)  #--takes memory from t5 and put it in a0
 			beqz $t5, newConversion	
 			beq $t5, $t1, newConversion
-			slti $t6, $t5, 48                 # if char < ascii(48),  input invalid,   ascii(48) = 0 0 -9 restriction 
+			slti $t6, $t5, 48                 #--if char < ascii(48),  input invalid,   ascii(48) = 0 0 -9 restriction 
 			bne $t6, $zero, invalidInput_Function
-			slti $t6, $t5, 58                 # if char < ascii(58),  input is valid,  ascii(58) = 9 0 - 9 restriction 
+			slti $t6, $t5, 58                 #--if char < ascii(58),  input is valid,  ascii(58) = 9 0 - 9 restriction 
 			bne $t6, $zero, moveForward
-			slti $t6, $t5, 65                 # if char < ascii(65),  input invalid,   ascii(97) = A
+			slti $t6, $t5, 65                 #--if char < ascii(65),  input invalid,   ascii(97) = A
 			bne $t6, $zero, invalidInput_Function
-			slti $t6, $t5, 83                 # if char < ascii(88),  input is valid,  ascii(88) = X
+			slti $t6, $t5, 83                 #--if char < ascii(88),  input is valid,  ascii(88) = X
 			bne $t6, $zero, moveForward
-			slti $t6, $t5, 97                 # if char < ascii(97),  input invalid,   ascii(97) = a
+			slti $t6, $t5, 97                 #--if char < ascii(97),  input invalid,   ascii(97) = a
 			bne $t6, $zero, invalidInput_Function
-			slti $t6, $t5, 115                # if char < ascii(120), input is valid, ascii(120) = x
+			slti $t6, $t5, 115                #--if char < ascii(120), input is valid, ascii(120) = x
 			bne $t6, $zero, moveForward
-			bgt $t5, 116, invalidInput_Function   # if char > ascii(119), input invalid,  ascii(119) = w
+			bgt $t5, 116, invalidInput_Function   #--if char > ascii(119), input invalid,  ascii(119) = w
 
 		moveForward:
 			addi $a0, $a0, 1
 			j checkString
 
-		newConversion:
-			move $a0, $t4
+		newConversion: #--converts sting to charcter
+			move $a0, $t4  #--move value in a0 to temporary register
 			addi $t7, $t7, 0
 			add $s0, $s0, $t0
 			addi $s0, $s0, -1	
@@ -158,7 +158,7 @@
 			li $s1, 1
 			li $s5, 0
 
-		baseConvert:
+		baseConvert: #--converts base 10 to base 29 up and low
 			lb $s4, 0($a0)
 			beqz $s4, printResult
 			beq $s4, $t1, printResult
